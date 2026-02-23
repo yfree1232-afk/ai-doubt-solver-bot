@@ -1,0 +1,5 @@
+pyTelegramBotAPI
+openai
+pytesseract
+pillow
+sympy
