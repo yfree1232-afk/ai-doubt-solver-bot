@@ -1,15 +1,14 @@
 import telebot
-import openai
+import os
+from openai import OpenAI
 import pytesseract
 from PIL import Image
-import os
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
 
-openai.api_key = OPENAI_KEY
-
 bot = telebot.TeleBot(BOT_TOKEN)
+client = OpenAI(api_key=OPENAI_KEY)
 
 def detect_subject(q):
 
@@ -35,6 +34,60 @@ def ai_solver(question):
     subject = detect_subject(question)
 
     prompt = f"""
+You are an expert teacher.
+
+Subject: {subject}
+
+Solve this question step by step and explain simply.
+
+Question:
+{question}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role":"user","content":prompt}]
+    )
+
+    return subject, response.choices[0].message.content
+
+
+@bot.message_handler(commands=['start'])
+def start(msg):
+
+    bot.reply_to(msg,
+"""📚 Ultra AI Doubt Solver
+
+Send your question.
+
+Subjects supported:
+Physics
+Chemistry
+Maths
+Biology
+""")
+
+
+@bot.message_handler(content_types=['text'])
+def text_solver(msg):
+
+    question = msg.text
+
+    try:
+        subject, answer = ai_solver(question)
+
+        bot.reply_to(msg,
+f"""📚 Subject: {subject}
+
+✅ Solution:
+{answer}
+""")
+
+    except Exception as e:
+        bot.reply_to(msg,"⚠️ Error: " + str(e))
+
+
+bot.infinity_polling()    prompt = f"""
 You are an expert teacher.
 
 Subject: {subject}
