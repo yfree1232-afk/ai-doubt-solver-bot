@@ -1,49 +1,63 @@
 import telebot
-import google.generativeai as genai
 import os
 from flask import Flask
-from threading import Thread
+import threading
+import google.generativeai as genai
 
-# ====== CONFIG ======
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-GEMINI_API = "AIzaSyARi-erIuiwM-7TFbgX7KPku4C-LBPRRz0"
+# ENV variables
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+# Telegram bot
 bot = telebot.TeleBot(BOT_TOKEN)
 
-genai.configure(api_key=GEMINI_API)
-model = genai.GenerativeModel("gemini-pro")
+# Gemini setup
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
-# ====== TELEGRAM BOT ======
-
+# Start command
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "🤖 Send me any question, I will solve it using AI.")
+    bot.reply_to(message,
+        "🤖 AI DOUBT SOLVER BOT\n\n"
+        "Send any Physics / Chemistry / Maths / Biology question.\n"
+        "I will give step-by-step solution."
+    )
 
-@bot.message_handler(func=lambda m: True)
-def solve(message):
+# Question handler
+@bot.message_handler(func=lambda message: True)
+def solve_question(message):
+    question = message.text
+
     try:
-        response = model.generate_content(message.text)
-        bot.reply_to(message, response.text)
+        response = model.generate_content(
+            f"Solve this question with detailed step-by-step explanation:\n{question}"
+        )
+
+        answer = response.text
+
+        bot.reply_to(message, answer)
+
     except Exception as e:
         bot.reply_to(message, f"⚠️ Error: {e}")
 
-# ====== PORT SERVER (RENDER FIX) ======
 
-app = Flask('')
+# -------- Render keep alive server --------
 
-@app.route('/')
+app = Flask(__name__)
+
+@app.route("/")
 def home():
-    return "Bot Running ✅"
+    return "AI Doubt Solver Bot Running"
 
-def run():
+
+def run_bot():
+    bot.infinity_polling()
+
+
+threading.Thread(target=run_bot).start()
+
+
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    app.run(host='0.0.0.0', port=port)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
-# ====== START ======
-
-keep_alive()
-bot.infinity_polling()
+    app.run(host="0.0.0.0", port=port)
