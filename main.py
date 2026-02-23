@@ -6,7 +6,7 @@ from threading import Thread
 
 # ====== CONFIG ======
 BOT_TOKEN = "YOUR_BOT_TOKEN"
-GEMINI_API = "YOUR_GEMINI_API"
+GEMINI_API = "AIzaSyARi-erIuiwM-7TFbgX7KPku4C-LBPRRz0"
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
