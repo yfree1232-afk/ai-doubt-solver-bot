@@ -1,6 +1,6 @@
 pyTelegramBotAPI
 openai
-pytesseract
 pillow
+pytesseract
 sympy
 flask
